@@ -15,6 +15,6 @@ let tailwindcss = require('tailwindcss');
 mix.js('resources/assets/js/app.js', 'public/js')
     .postCss('resources/assets/css/main.css', 'public/css', [
         tailwindcss('./tailwind.js'),
-    ])
-    .browserSync('ticketbeast.test/concerts/1');
+    ]);
+    // .browserSync('ticketbeast.test/concerts/1');
 

@@ -13,7 +13,7 @@ class ReservationTest extends TestCase
     use RefreshDatabase;
 
     /** @test */
-    public function it_calculates_the_toal_coast()
+    public function it_calculates_the_toal_cost()
     {
         $tickets = collect([
             (object) ['price' => 1],

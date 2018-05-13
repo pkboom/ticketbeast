@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Seeder;
 use App\Ticket;
+use App\Concert;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,6 +14,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // $this->call(UsersTableSeeder::class);
-        factory(Ticket::class, 30)->create();
+        // factory(Ticket::class, 30)->create();
+        factory(Concert::class)->create()->addTickets(10);
     }
 }

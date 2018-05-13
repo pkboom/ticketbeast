@@ -16,12 +16,12 @@
                     <label class="form-label">
                         Qty
                     </label>
-                    <input v-model="quantity" class="form-control">
+                    <input v-model="quantity" class="border">
                 </div>
             </div>
         </div>
         <div class="text-right">
-            <button class="btn btn-primary btn-block"
+            <button class="text-white rounded bg-blue py-2 px-4"
                 @click="openStripe"
                 :class="{ 'btn-loading': processing }"
                 :disabled="processing"
@@ -53,12 +53,15 @@
                 }
                 return `One ticket to ${this.concertTitle}`
             },
+
             totalPrice() {
                 return this.quantity * this.price
             },
+
             priceInDollars() {
                 return (this.price / 100).toFixed(2)
             },
+
             totalPriceInDollars() {
                 return (this.totalPrice / 100).toFixed(2)
             },
@@ -75,6 +78,7 @@
 
                 return handler
             },
+
             openStripe(callback) {
                 this.stripeHandler.open({
                     name: 'TicketBeast',
@@ -87,26 +91,22 @@
                     token: this.purchaseTickets,
                 })
             },
+
             purchaseTickets(token) {
-                console.log({
+                this.processing = true
+                
+                axios.post(`/concerts/${this.concertId}/orders`, {
                     email: token.email,
-                    quantity: this.quantity,
+                    ticket_quantity: this.quantity,
                     payment_token: token.id,
+                }).then(response => {
+                    console.log("Charge succeeded")
+                }).catch(response => {
+                    this.processing = false
                 })
-
-                // this.processing = true
-
-                // axios.post(`/concerts/${this.concertId}/orders`, {
-                //     email: token.email,
-                //     quantity: this.quantity,
-                //     payment_token: token.id,
-                // }).then(response => {
-                //     window.location.href = response.body.url
-                // }).catch(response => {
-                //     this.processing = false
-                // })
             }
         },
+
         created() {
             this.stripeHandler = this.initStripe()
         }

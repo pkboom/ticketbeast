@@ -9,6 +9,7 @@ use App\Billing\FakePaymentGateway;
 use App\Billing\PaymentGateway;
 use Symfony\Component\HttpFoundation\Response;
 use App\Exceptions\NotEnoughTicketsException;
+use App\OrderConfirmationNumberGenerator;
 
 class PurchaseTicketsTest extends TestCase
 {
@@ -48,14 +49,23 @@ class PurchaseTicketsTest extends TestCase
     /** @test */
     public function customer_can_purchase_tickets_to_a_published_concert()
     {
+        $this->withoutExceptionHandling();
+
+        $orderConfirmationNumberGenerator = \Mockery::mock(OrderConfirmationNumberGenerator::class, [
+            'generate' => 'ORDERCONFIRMATION1234',
+        ]);
+
+        app()->instance(OrderConfirmationNumberGenerator::class, $orderConfirmationNumberGenerator);
+
         $this->postJson('/concerts/1/orders', $this->purchaseInfo)
             ->assertJson([
+                'confirmation_number' => 'ORDERCONFIRMATION1234',
                 'email' => 'john@example.com',
                 'ticket_quantity' => 3,
                 'amount' => $this->concert->ticket_price * 3,
         ]);
 
-        $this->assertEquals($this->concert->ticket_price * 3, $this->paymentGateway->totalCharges());
+        $this->assertEquals($this->concert->ticket_price * 3, $this->paymentGateway->lastCharge()->amount());
 
         $this->assertTrue($this->concert->hasOrderFor('john@example.com'));
 
@@ -107,7 +117,6 @@ class PurchaseTicketsTest extends TestCase
     /** @test */
     public function an_order_is_not_created_if_payment_fails()
     {
-        $this->withoutExceptionHandling();
         $this->orderTickets(['payment_token' => 'invalid token'])
             ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }

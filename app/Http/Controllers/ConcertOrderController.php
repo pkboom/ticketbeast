@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\ConcertOrder;
 use Illuminate\Http\Request;
 use App\Billing\PaymentGateway;
 use App\Concert;
@@ -11,34 +10,14 @@ use App\Exceptions\PaymentFailedException;
 
 class ConcertOrderController extends Controller
 {
-    protected $paymentGateway;
+    // protected $paymentGateway;
 
-    public function __construct(PaymentGateway $paymentGateway)
-    {
-        $this->paymentGateway = $paymentGateway;
-    }
+    // public function __construct(PaymentGateway $paymentGateway)
+    // {
+    //     $this->paymentGateway = $paymentGateway;
+    // }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    public function store(Concert $concert)
+    public function store(Concert $concert, PaymentGateway $paymentGateway)
     {
         request()->validate([
             'email' => 'required|email',
@@ -49,11 +28,7 @@ class ConcertOrderController extends Controller
         try {
             $reservation = $concert->reserveTickets(request('ticket_quantity'), request('email'));
 
-            // $this->paymentGateway->charge($reservation->totalCost(), request('payment_token'));
-
-            // $order = $reservation->complete();
-
-            $order = $reservation->complete($this->paymentGateway, request('payment_token'));
+            $order = $reservation->complete($paymentGateway, request('payment_token'));
         } catch (PaymentFailedException $e) {
             $reservation->cancel();
 
@@ -65,50 +40,5 @@ class ConcertOrderController extends Controller
         }
 
         return response([], 201);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\ConcertOrder  $concertOrder
-     * @return \Illuminate\Http\Response
-     */
-    public function show(ConcertOrder $concertOrder)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\ConcertOrder  $concertOrder
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(ConcertOrder $concertOrder)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\ConcertOrder  $concertOrder
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, ConcertOrder $concertOrder)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\ConcertOrder  $concertOrder
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(ConcertOrder $concertOrder)
-    {
-        //
     }
 }

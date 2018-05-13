@@ -3,10 +3,18 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Facades\OrderConfirmationNumber;
 
 class Order extends Model
 {
     protected $guarded = [];
+
+    protected $appends = ['ticket_quantity'];
+
+    public function getRouteKeyName()
+    {
+        return 'confirmation_number';
+    }
 
     public function concert()
     {
@@ -21,6 +29,7 @@ class Order extends Model
     public static function forTickets($tickets, $email, $amount)
     {
         $order = static::create([
+            'confirmation_number' => OrderConfirmationNumber::generate(),
             'email' => $email,
             'amount' => $tickets->sum('price'),
             ]);
@@ -39,12 +48,8 @@ class Order extends Model
         return $this->tickets()->count();
     }
 
-    public function toArray()
+    public function getTicketQuantityAttribute()
     {
-        return [
-            'email' => $this->email,
-            'ticket_quantity' => $this->ticketQuantity(),
-            'amount' => $this->amount,
-        ];
+        return $this->ticketQuantity();
     }
 }

@@ -20,6 +20,9 @@
  */
 @tailwind components;
 
+.btn-loading {
+    @apply .opacity-50 .cursor-not-allowed;
+}
 /**
  * Here you would add any of your custom component classes; stuff that you'd
  * want loaded *before* the utilities so that the utilities could still
