@@ -5,8 +5,8 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Reservation;
-use App\Concert;
 use App\Ticket;
+use App\Factory\ConcertFactory;
 
 class ReservationTest extends TestCase
 {
@@ -29,8 +29,7 @@ class ReservationTest extends TestCase
     /** @test */
     public function a_customer_can_cancel_reserved_tickets()
     {
-        $concert = tap(factory(Concert::class)->states('published')->create())
-                    ->addTickets(3);
+        $concert = ConcertFactory::createPublished(['ticket_quantity' => 3]);
 
         $reservation = $concert->reserveTickets(2, 'johndoe@example.com');
 

@@ -7,16 +7,11 @@ use App\Billing\PaymentGateway;
 use App\Concert;
 use Symfony\Component\HttpFoundation\Response;
 use App\Exceptions\PaymentFailedException;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderConfirmationEmail;
 
 class ConcertOrderController extends Controller
 {
-    // protected $paymentGateway;
-
-    // public function __construct(PaymentGateway $paymentGateway)
-    // {
-    //     $this->paymentGateway = $paymentGateway;
-    // }
-
     public function store(Concert $concert, PaymentGateway $paymentGateway)
     {
         request()->validate([
@@ -29,6 +24,8 @@ class ConcertOrderController extends Controller
             $reservation = $concert->reserveTickets(request('ticket_quantity'), request('email'));
 
             $order = $reservation->complete($paymentGateway, request('payment_token'));
+
+            Mail::to($order->email)->send(new OrderConfirmationEmail($order));
         } catch (PaymentFailedException $e) {
             $reservation->cancel();
 

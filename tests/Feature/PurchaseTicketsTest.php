@@ -4,12 +4,17 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Concert;
 use App\Billing\FakePaymentGateway;
 use App\Billing\PaymentGateway;
 use Symfony\Component\HttpFoundation\Response;
 use App\Exceptions\NotEnoughTicketsException;
 use App\OrderConfirmationNumberGenerator;
+use App\Facades\OrderConfirmationNumber;
+use App\Facades\TicketCode;
+use App\Ticket;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderConfirmationEmail;
+use App\Factory\ConcertFactory;
 
 class PurchaseTicketsTest extends TestCase
 {
@@ -19,8 +24,6 @@ class PurchaseTicketsTest extends TestCase
 
     protected $concert;
 
-    protected $purchaseInfo;
-
     public function setUp()
     {
         parent::setUp();
@@ -29,8 +32,7 @@ class PurchaseTicketsTest extends TestCase
 
         $this->app->instance(PaymentGateway::class, $this->paymentGateway);
 
-        $this->concert = tap(factory(Concert::class)->states('published')->create())
-                            ->addTickets(3);
+        $this->concert = ConcertFactory::createPublished(['ticket_quantity' => 3]);
 
         $this->purchaseInfo = [
             'email' => 'john@example.com',
@@ -49,27 +51,51 @@ class PurchaseTicketsTest extends TestCase
     /** @test */
     public function customer_can_purchase_tickets_to_a_published_concert()
     {
-        $this->withoutExceptionHandling();
+        // $orderConfirmationNumberGenerator = \Mockery::mock(OrderConfirmationNumberGenerator::class, [
+        //     'generate' => 'ORDERCONFIRMATION1234',
+        // ]);
 
-        $orderConfirmationNumberGenerator = \Mockery::mock(OrderConfirmationNumberGenerator::class, [
-            'generate' => 'ORDERCONFIRMATION1234',
-        ]);
+        // app()->instance(OrderConfirmationNumberGenerator::class, $orderConfirmationNumberGenerator);
 
-        app()->instance(OrderConfirmationNumberGenerator::class, $orderConfirmationNumberGenerator);
+        Mail::fake();
+
+        OrderConfirmationNumber::shouldReceive('generate')
+            ->andReturn('ORDERCONFIRMATION1234');
+
+        TicketCode::shouldReceive('generateFor')
+            ->with(Ticket::class)
+            ->andReturn('TICKETCODE1', 'TICKETCODE2', 'TICKETCODE3');
 
         $this->postJson('/concerts/1/orders', $this->purchaseInfo)
             ->assertJson([
                 'confirmation_number' => 'ORDERCONFIRMATION1234',
-                'email' => 'john@example.com',
-                'ticket_quantity' => 3,
-                'amount' => $this->concert->ticket_price * 3,
+                'email' => $this->purchaseInfo['email'],
+                'amount' => $this->concert->ticket_price * $this->purchaseInfo['ticket_quantity'],
+                'tickets' => [
+                    ['code' => 'TICKETCODE1'],
+                    ['code' => 'TICKETCODE2'],
+                    ['code' => 'TICKETCODE3'],
+                ],
         ]);
 
-        $this->assertEquals($this->concert->ticket_price * 3, $this->paymentGateway->lastCharge()->amount());
+        $this->assertEquals(
+            $this->concert->ticket_price * $this->purchaseInfo['ticket_quantity'],
+            $this->paymentGateway->lastCharge()->amount()
+        );
 
-        $this->assertTrue($this->concert->hasOrderFor('john@example.com'));
+        $this->assertTrue($this->concert->hasOrderFor($this->purchaseInfo['email']));
 
-        $this->assertEquals(3, $this->concert->ordersFor('john@example.com')->ticketQuantity());
+        $this->assertEquals(
+            $this->purchaseInfo['ticket_quantity'],
+            $this->concert->ordersFor($this->purchaseInfo['email'])->ticketQuantity()
+        );
+
+        $order = $this->concert->ordersFor($this->purchaseInfo['email']);
+
+        Mail::assertSent(OrderConfirmationEmail::class, function ($mail) use ($order) {
+            return $mail->hasTo($this->purchaseInfo['email']) &&
+                $mail->order->id == $order->id;
+        });
     }
 
     /** @test */
@@ -161,5 +187,28 @@ class PurchaseTicketsTest extends TestCase
     public function orderTickets($param = [])
     {
         return $this->post('/concerts/1/orders', array_merge($this->purchaseInfo, $param));
+    }
+
+    /** @test */
+    public function t()
+    {
+        // $this->f(1, 2, 3);
+        // $this->ff(1, 2, 3);
+    }
+
+    public function f()
+    {
+        // dd(func_get_args());
+        $this->f2(func_get_args());
+    }
+
+    public function ff(...$args)
+    {
+        dd($args);
+    }
+
+    public function f2(...$arg)
+    {
+        dd($arg);
     }
 }

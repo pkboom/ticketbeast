@@ -16,29 +16,23 @@ class Order extends Model
         return 'confirmation_number';
     }
 
-    public function concert()
-    {
-        return $this->belongsTo(Concert::class);
-    }
-
     public function tickets()
     {
         return $this->hasMany(Ticket::class);
     }
 
-    public static function forTickets($tickets, $email, $amount)
+    public static function forTickets($tickets, $email, $charge)
     {
         $order = static::create([
             'confirmation_number' => OrderConfirmationNumber::generate(),
             'email' => $email,
-            'amount' => $tickets->sum('price'),
+            'amount' => $charge->amount(),
+            'card_last_four' => $charge->cardLastFour(),
             ]);
 
-        $order->tickets()->saveMany($tickets);
+        $tickets->each->claimFor($order);
 
-        // foreach ($tickets as $ticket) {
-        //     $order->tickets()->save($ticket);
-        // }
+        // $order->tickets()->saveMany($tickets);
 
         return $order;
     }
@@ -51,5 +45,17 @@ class Order extends Model
     public function getTicketQuantityAttribute()
     {
         return $this->ticketQuantity();
+    }
+
+    public function toArray()
+    {
+        return [
+            'confirmation_number' => $this->confirmation_number,
+            'email' => $this->email,
+            'amount' => $this->amount,
+            'tickets' => $this->tickets->map(function ($ticket) {
+                return ['code' => $ticket->code];
+            })->all(),
+        ];
     }
 }

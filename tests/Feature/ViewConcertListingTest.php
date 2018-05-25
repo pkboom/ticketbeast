@@ -13,7 +13,9 @@ class ViewConcertListingTest extends TestCase
     /** @test */
     public function user_can_view_a_published_concert_listing()
     {
-        $concert = create(Concert::class);
+        $concert = factory(Concert::class)->create([
+            'published_at' => today()
+        ]);
 
         $this->get('/concerts/' . $concert->id)
             ->assertSee($concert->title)
@@ -24,10 +26,12 @@ class ViewConcertListingTest extends TestCase
     /** @test */
     public function user_cannot_view_unpublished_concert_listings()
     {
-        $concert = create(Concert::class, ['published_at' => null]);
+        $this->withoutExceptionHandling();
 
-        $this->get('/concerts/' . $concert->id)
-            ->assertDontSee($concert->title)
-            ->assertStatus(404);
+        $concert = create(Concert::class);
+
+        $this->expectException(\Exception::class);
+
+        $this->get(route('concerts.show', $concert));
     }
 }

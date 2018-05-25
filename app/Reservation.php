@@ -20,9 +20,9 @@ class Reservation extends Model
 
     public function complete(PaymentGateway $paymentGateway, $token)
     {
-        $paymentGateway->charge($this->totalCost(), $token);
+        $charge = $paymentGateway->charge($this->totalCost(), $token);
 
-        return Order::forTickets($this->tickets, $this->email, $this->totalCost());
+        return Order::forTickets($this->tickets(), $this->email(), $charge);
     }
 
     public function totalCost()

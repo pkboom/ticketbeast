@@ -99,8 +99,8 @@
                     email: token.email,
                     ticket_quantity: this.quantity,
                     payment_token: token.id,
-                }).then(response => {
-                    console.log("Charge succeeded")
+                }).then(({data}) => {
+                    window.location = `/orders/${data.confirmation_number}`;
                 }).catch(response => {
                     this.processing = false
                 })

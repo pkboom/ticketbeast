@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Concert;
 use Carbon\Carbon;
 use App\Ticket;
+use App\Factory\ConcertFactory;
 
 class ConcertTest extends TestCase
 {
@@ -18,8 +19,7 @@ class ConcertTest extends TestCase
     {
         parent::setUp();
 
-        $this->concert = tap(factory(Concert::class)->states('published')->create())
-                            ->addTickets(3);
+        $this->concert = ConcertFactory::createPublished(['ticket_quantity' => 3]);
     }
 
     /** @test */
@@ -52,27 +52,9 @@ class ConcertTest extends TestCase
     }
 
     /** @test */
-    public function can_order_concert_tickets()
-    {
-        $order = $this->concert->orderTickets('johndoe@example.com', 3);
-
-        $this->assertDatabaseHas('orders', ['email' => 'johndoe@example.com']);
-
-        $this->assertEquals(3, $order->ticketQuantity());
-    }
-
-    /** @test */
     public function can_add_tickets()
     {
         $this->assertEquals(3, Ticket::count());
-    }
-
-    /** @test */
-    public function tickets_remaining_are_not_associated_with_existing_orders()
-    {
-        $order = $this->concert->orderTickets('johndoe@example.com', 2);
-
-        $this->assertEquals(1, $this->concert->ticketsRemaining());
     }
 
     /** @test */

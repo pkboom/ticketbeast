@@ -11,6 +11,11 @@ class Concert extends Model
 
     protected $dates = ['date', 'published_at'];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function orders()
     {
         return $this->belongsToMany(Order::class, 'tickets');
@@ -19,6 +24,18 @@ class Concert extends Model
     public function tickets()
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function isPublished()
+    {
+        return $this->published_at !== null;
+    }
+
+    public function publish()
+    {
+        $this->update(['published_at' => $this->freshTimestamp()]);
+
+        $this->addTickets($this->ticket_quantity);
     }
 
     public function getFormattedDateAttribute()
@@ -41,13 +58,6 @@ class Concert extends Model
         return $query->whereNotNull('published_at');
     }
 
-    public function orderTickets($email, $ticketQuantity)
-    {
-        $tickets = $this->findTickets($ticketQuantity);
-
-        return $this->createOrders($email, $tickets);
-    }
-
     public function reserveTickets($quantity, $email)
     {
         return new Reservation(
@@ -63,11 +73,6 @@ class Concert extends Model
         }
 
         return $this->tickets()->available()->take($ticketQuantity)->get();
-    }
-
-    public function createOrders($email, $tickets)
-    {
-        return Order::forTickets($tickets, $email, $tickets->sum('price'));
     }
 
     public function addTickets($quantity)
