@@ -29,7 +29,7 @@ class AddConcertTest extends TestCase
         // $this->assertEquals($concert->ticket_quantity, Concert::find(1)->tickets->count());
 
         $this->assertDatabaseHas('concerts', array_merge($concert, [
-            'date' => Carbon::parse(vsprintf('%s %s', ['2017-11-10', '8:00pm']))
+            'date' => Carbon::parse(vsprintf('%s %s', ['2017-11-10', '8:00pm'])),
         ]));
     }
 

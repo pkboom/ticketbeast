@@ -9,7 +9,7 @@ $factory->define(App\Concert::class, function (Faker $faker) {
         'user_id' => factory(User::class),
         'title' => $faker->word,
         'subtitle' => $faker->sentence,
-        'date' => $faker->dateTime(),
+        'date' => Carbon::today()->addMonths(6)->hour(19),
         'ticket_price' => $faker->numberBetween(10, 1000),
         'venue' => $faker->streetName,
         'venue_address' => $faker->streetAddress,

@@ -13,6 +13,18 @@ class StripePaymentGateway implements PaymentGateway
         \Stripe\Stripe::setApiKey($apiKey);
     }
 
+    public function getValidTestToken($cardNumber = self::TEST_CARD_NUMBER)
+    {
+        return \Stripe\Token::create([
+            'card' => [
+                'number' => $cardNumber,
+                'exp_month' => 5,
+                'exp_year' => date('Y') + 1,
+                'cvc' => '314'
+            ]
+        ])->id;
+    }
+
     /**
      * @return Stripe\Charge
      */
@@ -32,18 +44,6 @@ class StripePaymentGateway implements PaymentGateway
         } catch (\Stripe\Error\InvalidRequest $e) {
             throw new PaymentFailedException;
         }
-    }
-
-    public function getValidTestToken($cardNumber = self::TEST_CARD_NUMBER)
-    {
-        return \Stripe\Token::create([
-            'card' => [
-                'number' => $cardNumber,
-                'exp_month' => 5,
-                'exp_year' => date('Y') + 1,
-                'cvc' => '314'
-            ]
-        ])->id;
     }
 
     public function lastCharge()

@@ -20,10 +20,6 @@ class PurchaseTicketsTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $paymentGateway;
-
-    protected $concert;
-
     public function setUp()
     {
         parent::setUp();

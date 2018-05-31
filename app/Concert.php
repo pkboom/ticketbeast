@@ -18,7 +18,7 @@ class Concert extends Model
 
     public function orders()
     {
-        return $this->belongsToMany(Order::class, 'tickets');
+        return Order::whereIn('Id', $this->tickets()->pluck('order_id'));
     }
 
     public function tickets()
@@ -97,5 +97,20 @@ class Concert extends Model
     public function ordersFor($customerEmail)
     {
         return $this->orders()->where('email', $customerEmail)->first();
+    }
+
+    public function ticketsSold()
+    {
+        return $this->tickets()->sold()->count();
+    }
+
+    public function percentSoldOut()
+    {
+        return number_format(($this->ticketsSold() / $this->tickets_quantity) * 100, 2);
+    }
+
+    public function revenueInDollars()
+    {
+        return $this->orders()->sum('amount') / 100;
     }
 }

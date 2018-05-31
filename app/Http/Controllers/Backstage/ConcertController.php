@@ -10,7 +10,10 @@ class ConcertController extends Controller
 {
     public function index()
     {
-        return view('backstage.concerts.index', ['concerts' => auth()->user()->concerts]);
+        return view('backstage.concerts.index', [
+            'publishedConcerts' => auth()->user()->concerts->filter->isPublished(),
+            'unpublishedConcerts' => auth()->user()->concerts->reject->isPublished(),
+        ]);
     }
 
     public function create()
@@ -41,7 +44,8 @@ class ConcertController extends Controller
             'date' => $date
         ];
 
-        $concert = tap(auth()->user()->concerts()->create($result))->publish();
+        // $concert = tap(auth()->user()->concerts()->create($result))->publish();
+        $concert = auth()->user()->concerts()->create($result);
 
         if (request()->wantsJson()) {
             return response($concert, 201);

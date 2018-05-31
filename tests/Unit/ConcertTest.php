@@ -8,6 +8,7 @@ use App\Concert;
 use Carbon\Carbon;
 use App\Ticket;
 use App\Factory\ConcertFactory;
+use App\Order;
 
 class ConcertTest extends TestCase
 {
@@ -65,5 +66,25 @@ class ConcertTest extends TestCase
         $this->assertCount(2, $reservation->tickets());
 
         $this->assertEquals(1, $this->concert->fresh()->ticketsRemaining());
+    }
+
+    /** @test */
+    public function can_count_sold_tickets()
+    {
+        $this->concert->tickets()->whereId(1)->update(['order_id' => 1]);
+        $this->concert->tickets()->whereId(2)->update(['order_id' => 1]);
+
+        $this->assertEquals(2, $this->concert->ticketsSold());
+    }
+
+    /** @test */
+    public function it_calculates_the_revenue_in_dollars()
+    {
+        $order = factory(Order::class)->create();
+
+        $this->concert->tickets()->whereId(1)->update(['order_id' => $order->id]);
+        $this->concert->tickets()->whereId(2)->update(['order_id' => $order->id]);
+
+        $this->assertEquals($order->amount / 100, $this->concert->revenueInDollars());
     }
 }

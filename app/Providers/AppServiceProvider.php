@@ -43,7 +43,6 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(OrderConfirmationNumberGenerator::class, RandomOrderConfirmationNumberGenerator::class);
 
-        // $this->app->bind(TicketCodeGenerator::class, HashidsTicketCodeGenerator::class);
         $this->app->bind(TicketCodeGenerator::class, function () {
             return new HashidsTicketCodeGenerator(config('ticketbeast.ticket_code_salt'));
         });
