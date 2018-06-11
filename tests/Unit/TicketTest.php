@@ -77,4 +77,5 @@ class TicketTest extends TestCase
 
         $this->assertEquals('asdf', $ticket->code);
     }
+
 }

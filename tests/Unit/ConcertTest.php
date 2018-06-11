@@ -87,4 +87,5 @@ class ConcertTest extends TestCase
 
         $this->assertEquals($order->amount / 100, $this->concert->revenueInDollars());
     }
+
 }

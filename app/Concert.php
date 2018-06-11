@@ -18,12 +18,19 @@ class Concert extends Model
 
     public function orders()
     {
+        // Don't use belongsToMnay.
+        // Because it will try to access empty orders.
         return Order::whereIn('Id', $this->tickets()->pluck('order_id'));
     }
 
     public function tickets()
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function attendeeMessages()
+    {
+        return $this->hasMany(AttendeeMessage::class);
     }
 
     public function isPublished()
