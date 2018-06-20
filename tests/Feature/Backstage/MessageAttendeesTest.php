@@ -53,7 +53,6 @@ class MessageAttendeesTest extends TestCase
     /** @test */
     public function a_promoter_can_send_a_new_message()
     {
-        $this->withoutExceptionHandling();
         Queue::fake();
 
         $message = ['subject' => 'My subject', 'message' => 'My message'];
@@ -64,11 +63,10 @@ class MessageAttendeesTest extends TestCase
 
         $this->assertDatabaseHas('attendee_messages', $message);
 
-        Queue::assertPushed(SendAttendeeMessage::class, function ($job) use ($message) {
-            // dd($job->attendMessage->toArray());
-            // dd($message);
+        $attendeeMessage = $this->concert->attendeeMessages()->first();
 
-            return $job->attendMessage->is($message);
+        Queue::assertPushed(SendAttendeeMessage::class, function ($job) use ($attendeeMessage) {
+            return $job->attendeeMessage->is($attendeeMessage);
         });
     }
 

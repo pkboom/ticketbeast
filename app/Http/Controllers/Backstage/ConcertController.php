@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backstage;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use App\Concert;
+use App\Events\ConcertAdded;
 
 class ConcertController extends Controller
 {
@@ -34,18 +35,21 @@ class ConcertController extends Controller
             'zip' => 'required',
             'ticket_price' => 'required | numeric | min:5',
             'ticket_quantity' => 'required | numeric | min:1',
+            'poster_image' => 'nullable | image | dimensions:min_width=600,ratio=8.5/11'
         ]);
 
-        $result = request()->except(['date', 'time']);
+        $result = request()->except(['date', 'time', 'poster_image']);
 
         $date = Carbon::parse(vsprintf('%s %s', [request('date'), request('time')]));
 
-        $result = $result + [
-            'date' => $date
-        ];
+        $result = array_merge($result, [
+            'date' => $date,
+            'poster_image_path' => optional(request('poster_image'))->store('posters', 'public'),
+        ]);
 
-        // $concert = tap(auth()->user()->concerts()->create($result))->publish();
         $concert = auth()->user()->concerts()->create($result);
+
+        ConcertAdded::dispatch($concert);
 
         if (request()->wantsJson()) {
             return response($concert, 201);

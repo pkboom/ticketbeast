@@ -4,9 +4,13 @@ namespace Tests\Feature\Backstage;
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\User;
 use App\Concert;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use App\User;
+use App\Events\ConcertAdded;
+use Illuminate\Support\Facades\Event;
 
 class AddConcertTest extends TestCase
 {
@@ -24,9 +28,7 @@ class AddConcertTest extends TestCase
     {
         $concert = factory(Concert::class)->make()->toArray();
 
-        $concert = $this->publishConcertWithUser($concert)->json();
-
-        // $this->assertEquals($concert->ticket_quantity, Concert::find(1)->tickets->count());
+        $concert = $this->publishConcertWithJson($concert)->json();
 
         $this->assertDatabaseHas('concerts', array_merge($concert, [
             'date' => Carbon::parse(vsprintf('%s %s', ['2017-11-10', '8:00pm'])),
@@ -40,7 +42,7 @@ class AddConcertTest extends TestCase
 
         unset($concert['additional_information']);
 
-        $concert = $this->publishConcertWithUser($concert)->json();
+        $concert = $this->publishConcertWithJson($concert)->json();
 
         $this->assertDatabaseHas('concerts', array_merge($concert, [
             'date' => Carbon::parse(vsprintf('%s %s', ['2017-11-10', '8:00pm']))
@@ -54,7 +56,7 @@ class AddConcertTest extends TestCase
 
         unset($concert['subtitle']);
 
-        $concert = $this->publishConcertWithUser($concert)->json();
+        $concert = $this->publishConcertWithJson($concert)->json();
 
         $this->assertDatabaseHas('concerts', array_merge($concert, [
             'date' => Carbon::parse(vsprintf('%s %s', ['2017-11-10', '8:00pm']))
@@ -121,25 +123,104 @@ class AddConcertTest extends TestCase
 
     public function publishConcert($options = [])
     {
-        $user = isset($options['user_id']) ?
-            User::find($options['user_id']) :
-            factory(User::class)->create();
-
-        $this->be($user);
-
-        return $this->post('/backstage/concerts', $options);
+        return $this->getUser($options)->post('/backstage/concerts', $options);
     }
 
-    public function publishConcertWithUser($options)
+    public function addDateAndTime($options)
     {
-        $concertWithTicketAndTime = array_merge($options, [
-            // 'ticket_quantity' => '2',
+        return array_merge($options, [
             'date' => '2017-11-10',
-            'time' => '8:00pm'
+            'time' => '8:00pm',
+        ]);
+    }
+
+    public function getUser($options = [])
+    {
+        // array_get returns null if the key is not found
+        // User::find(null) returns null
+        return $this->signIn(User::find(array_get($options, 'user_id')));
+    }
+
+    public function publishConcertWithJson($options)
+    {
+        $options = $this->addDateAndTime($options);
+
+        return $this->getUser($options)->postJson('/backstage/concerts', $options);
+    }
+
+    /** @test */
+    public function poster_image_is_uploaded_if_included()
+    {
+        $width = 600;
+        $height = $width * 11 / 8.5;
+
+        Storage::fake('public');
+
+        $options = factory(Concert::class)->make()->toArray();
+
+        $concert = $this->publishConcertWithJson($options + [
+            'poster_image' => $file = UploadedFile::fake()->image('concert-poster.jpg', $width, $height)
         ]);
 
-        $this->be(User::find($options['user_id']));
+        $this->assertEquals('posters/' . $file->hashName(), Concert::first()->poster_image_path);
 
-        return $this->postJson('/backstage/concerts', $concertWithTicketAndTime);
+        Storage::disk('public')->assertExists('posters/' . $file->hashName());
+    }
+
+    /** @test */
+    public function poster_image_must_be_an_image()
+    {
+        $this->publishConcert(['poster_image' => 'non-image'])
+            ->assertSessionHasErrors('poster_image');
+    }
+
+    /** @test */
+    public function post_image_must_be_at_least_600px_wide()
+    {
+        $width = 599;
+        $height = $width * 11 / 8.5;
+
+        $this->publishConcert(['poster_image' => UploadedFile::fake()->image('concert-poster.jpg', $width, $height)])
+            ->assertSessionHasErrors('poster_image');
+    }
+
+    /** @test */
+    public function poster_image_must_have_a_letter_aspect_ratio()
+    {
+        $width = 600;
+        $height = $width * 12 / 8.5;
+
+        $this->publishConcert(['poster_image' => UploadedFile::fake()->image('concert-poster.jpg', $width, $height)])
+            ->assertSessionHasErrors('poster_image');
+
+        $height = $width * 10 / 8.5;
+
+        $this->publishConcert(['poster_image' => UploadedFile::fake()->image('concert-poster.jpg', $width, $height)])
+            ->assertSessionHasErrors('poster_image');
+
+        $height = $width * 11 / 8.6;
+
+        $this->publishConcert(['poster_image' => UploadedFile::fake()->image('concert-poster.jpg', $width, $height)])
+            ->assertSessionHasErrors('poster_image');
+
+        $height = $width * 11 / 8.4;
+
+        $this->publishConcert(['poster_image' => UploadedFile::fake()->image('concert-poster.jpg', $width, $height)])
+            ->assertSessionHasErrors('poster_image');
+    }
+
+    /** @test */
+    public function an_event_is_fired_when_a_concert_is_added()
+    {
+        Event::fake();
+
+        $concert = factory(Concert::class)->make()->toArray();
+
+        $concert = $this->publishConcertWithJson($concert)->json();
+        // dd($concert);
+
+        Event::assertDispatched(ConcertAdded::class, function ($e) use ($concert) {
+            return $e->concert->id === $concert['id'];
+        });
     }
 }

@@ -31,14 +31,24 @@ class SendAttendeeMessageTest extends TestCase
 
         SendAttendeeMessage::dispatch($message);
 
-        Mail::assertSent(AttendeeMessageEmail::class, function ($mail) use ($orderA) {
+        // Mail::assertSent(AttendeeMessageEmail::class, function ($mail) use ($orderA) {
+        //     return $mail->hasTo($orderA->email);
+        // });
+
+        // Mail::assertSent(AttendeeMessageEmail::class, function ($mail) use ($orderB) {
+        //     return $mail->hasTo($orderB->email);
+        // });
+
+        // Mail::assertSent(AttendeeMessageEmail::class, 2);
+
+        Mail::assertQueued(AttendeeMessageEmail::class, function ($mail) use ($orderA) {
             return $mail->hasTo($orderA->email);
         });
 
-        Mail::assertSent(AttendeeMessageEmail::class, function ($mail) use ($orderB) {
+        Mail::assertQueued(AttendeeMessageEmail::class, function ($mail) use ($orderB) {
             return $mail->hasTo($orderB->email);
         });
 
-        Mail::assertSent(AttendeeMessageEmail::class, 2);
+        Mail::assertQueued(AttendeeMessageEmail::class, 2);
     }
 }
