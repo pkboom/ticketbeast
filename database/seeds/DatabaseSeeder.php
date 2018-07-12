@@ -5,6 +5,7 @@ use App\Concert;
 use App\User;
 use App\Factory\ConcertFactory;
 use Carbon\Carbon;
+use App\Invitation;
 
 class DatabaseSeeder extends Seeder
 {
@@ -37,6 +38,6 @@ class DatabaseSeeder extends Seeder
         Carbon::setTestNow();
         // $concert = tap($user->concerts()->save(factory(Concert::class)->make()))->addTickets(10);
 
-        factory(Concert::class)->create();
+        factory(Invitation::class)->create();
     }
 }

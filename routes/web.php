@@ -8,6 +8,8 @@ Route::get('/orders/{confirmationNumber}', 'OrderController@show');
 
 Auth::routes();
 
+Route::get('/invitations/{code}', 'InvitationController@show')->name('invitations.show');
+
 Route::group(['middleware' => 'auth', 'prefix' => 'backstage', 'namespace' => 'Backstage'], function () {
     Route::get('/concerts', 'ConcertController@index')->name('backstage.concerts.index');
     Route::get('/concerts/new', 'ConcertController@create')->name('backstage.concerts.new');
@@ -20,4 +22,7 @@ Route::group(['middleware' => 'auth', 'prefix' => 'backstage', 'namespace' => 'B
 
     Route::get('/concerts/{concertId}/messages/new', 'ConcertMessageController@create')->name('backstage.concert-messages.new');
     Route::post('/concerts/{concertId}messages', 'ConcertMessageController@store')->name('backstage.concert-messages.store');
+
+    Route::get('/stripe-connect/authorize', 'StripeConnectController@authorizeRedirect');
+    Route::get('/stripe-connect/redirect', 'StripeConnectController@redirect');
 });

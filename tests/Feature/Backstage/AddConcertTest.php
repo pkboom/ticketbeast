@@ -11,6 +11,8 @@ use Illuminate\Http\UploadedFile;
 use App\User;
 use App\Events\ConcertAdded;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class AddConcertTest extends TestCase
 {
@@ -154,6 +156,8 @@ class AddConcertTest extends TestCase
         $width = 600;
         $height = $width * 11 / 8.5;
 
+        Event::fake([ConcertAdded::class]);
+
         Storage::fake('public');
 
         $options = factory(Concert::class)->make()->toArray();
@@ -223,4 +227,5 @@ class AddConcertTest extends TestCase
             return $e->concert->id === $concert['id'];
         });
     }
+
 }

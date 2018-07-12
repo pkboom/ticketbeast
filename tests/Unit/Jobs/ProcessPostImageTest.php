@@ -18,15 +18,30 @@ class ProcessPostImageTest extends TestCase
     {
         Storage::fake('public');
 
-        $width = 800;
-        $height = $width * 11 / 8.5;
+        $width = 1200;
+        $height = 400;
+
+        [$newWidth, $newHeight] = $this->createImage($width, $height);
+
+        $this->assertEquals(600, $newWidth);
+        $this->assertEquals(200, $newHeight);
+
+        $width = 300;
+        $height = 300;
+
+        [$newWidth, $newHeight] = $this->createImage($width, $height);
+
+        $this->assertEquals(600, $newWidth);
+        $this->assertEquals(600, $newHeight);
+    }
+
+    public function createImage($width, $height)
+    {
         $poster_image_path = 'posters/concert-poster.jpg';
 
         Storage::disk('public')->putFileAs('posters', UploadedFile::fake()->image('concert-poster.jpg', $width, $height), 'concert-poster.jpg');
 
-        $concert = ConcertFactory::createPublished([
-            'poster_image_path' => $poster_image_path
-        ]);
+        $concert = ConcertFactory::createPublished(['poster_image_path' => $poster_image_path]);
 
         ConcertAdded::dispatch($concert);
 
@@ -34,9 +49,6 @@ class ProcessPostImageTest extends TestCase
 
         // $data = getimagesizefromstring($image);
         // list($width) = getimagesizefromstring($image);
-        [$savedImageWidth, $savedImageHeight] = getimagesizefromstring($image);
-
-        $this->assertEquals(600, $savedImageWidth);
-        $this->assertEquals(776, $savedImageHeight);
+        return getimagesizefromstring($image);
     }
 }
