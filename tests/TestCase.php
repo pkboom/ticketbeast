@@ -43,9 +43,9 @@ abstract class TestCase extends BaseTestCase
         });
     }
 
-    protected function signIn($user = null)
+    protected function signIn($user = [])
     {
-        $user = $user ?? create(User::class);
+        $user = is_array($user) ? factory(User::class)->create($user + ['stripe_account_id' => 1]) : $user;
 
         return $this->actingAs($user);
     }

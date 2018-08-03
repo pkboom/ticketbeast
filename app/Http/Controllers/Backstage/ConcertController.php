@@ -37,7 +37,7 @@ class ConcertController extends Controller
             'ticket_quantity' => 'required | numeric | min:1',
             'poster_image' => 'nullable | image | dimensions:min_width=600,ratio=8.5/11'
         ]);
-
+        
         $result = request()->except(['date', 'time', 'poster_image']);
 
         $date = Carbon::parse(vsprintf('%s %s', [request('date'), request('time')]));

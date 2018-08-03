@@ -76,7 +76,7 @@ class PurchaseTicketsTest extends TestCase
 
         $this->assertEquals(
             $this->concert->ticket_price * $this->purchaseInfo['ticket_quantity'],
-            $this->paymentGateway->lastCharge()->amount()
+            $this->paymentGateway->totalChargesFor('test_acct_1234')
         );
 
         $this->assertTrue($this->concert->hasOrderFor($this->purchaseInfo['email']));
@@ -188,7 +188,7 @@ class PurchaseTicketsTest extends TestCase
     /** @test */
     public function t()
     {
-        // $this->f(1, 2, 3);
+        $this->f(1, 2, 3);
         // $this->ff(1, 2, 3);
     }
 
@@ -200,11 +200,38 @@ class PurchaseTicketsTest extends TestCase
 
     public function ff(...$args)
     {
-        dd($args);
+        dump($args);
     }
 
     public function f2(...$arg)
     {
-        dd($arg);
+        dump($arg);
+    }
+
+    /** @test */
+    public function g()
+    {
+        $collection = collect([
+            [
+                'name' => 'John',
+                'department' => 'Sales',
+                'email' => 'john@example.com'
+            ],
+            [
+                'name' => 'Jane',
+                'department' => 'Marketing',
+                'email' => 'jane@example.com'
+            ]
+        ]);
+
+        $keyed = $collection->mapWithKeys(function ($item) {
+            return [$item['email'] => $item['name']];
+        });
+        $keyed2 = $collection->map(function ($item) {
+            return [$item['email'] => $item['name']];
+        });
+
+        dump($keyed->all());
+        dump($keyed2->all());
     }
 }

@@ -11,16 +11,20 @@ class Reservation extends Model
 
     protected $email;
 
-    public function __construct($tickets, $email)
+    protected $accountId;
+
+    public function __construct($tickets, $email, $accountId)
     {
         $this->tickets = $tickets;
 
         $this->email = $email;
+
+        $this->accountId = $accountId;
     }
 
     public function complete(PaymentGateway $paymentGateway, $token)
     {
-        $charge = $paymentGateway->charge($this->totalCost(), $token);
+        $charge = $paymentGateway->charge($this->totalCost(), $token, $this->accountId);
 
         return Order::forTickets($this->tickets(), $this->email(), $charge);
     }

@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
 use App\Billing\StripePaymentGateway;
 use App\Billing\PaymentGateway;
 use App\OrderConfirmationNumberGenerator;
@@ -22,7 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Schema::defaultStringLength(191);
     }
 
     /**
@@ -37,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->app->bind(PaymentGateway::class, StripePaymentGateway::class);
+        // $this->app->alias(StripePaymentGateway::class, PaymentGateway::class);
 
         $this->app->bind(StripePaymentGateway::class, function () {
             return new StripePaymentGateway(config('services.stripe.secret'));

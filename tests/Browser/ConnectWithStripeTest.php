@@ -13,17 +13,15 @@ class ConnectWithStripeTest extends DuskTestCase
     /** @test */
     public function it_connects_a_stripe_account()
     {
-        $user = factory(User::class)->create([
-            'stripe_account_id' => null,
-            'stripe_access_token' => null,
-        ]);
+        $user = factory(User::class)->create();
 
         $this->browse(function ($browser) use ($user) {
             $browser->loginAs($user)
-                    ->visit('/backstage/stripe-connect/authorize')
+                    ->visit('/backstage/stripe-connect/connect')
+                    ->clickLink('Connect with Stripe')
                     ->assertUrlIs('https://connect.stripe.com/oauth/authorize')
-                    ->assertQueryStringHas('client_id', config('services.stripe.client_id'))
                     ->assertQueryStringHas('response_type', 'code')
+                    ->assertQueryStringHas('client_id', config('services.stripe.client_id'))
                     ->assertQueryStringHas('scope', 'read_write')
                     ->clickLink('Skip this account form')
                     ->assertRouteIs('backstage.concerts.index');

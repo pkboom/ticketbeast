@@ -34,8 +34,9 @@ class EditConcertTest extends TestCase
 
         $this->expectException(\Exception::class);
 
-        $this->be($this->concert->user)
-            ->get(route('backstage.concerts.edit', $this->concert));
+        $this->signIn();
+
+        $this->get(route('backstage.concerts.edit', $this->concert));
     }
 
     /** @test */
@@ -54,7 +55,7 @@ class EditConcertTest extends TestCase
     /** @test */
     public function promoters_can_see_their_unpublished_concerts()
     {
-        $this->be($this->concert->user);
+        $this->signIn($this->concert->user);
 
         $this->get(route('backstage.concerts.edit', $this->concert))
             ->assertSee($this->concert->title)

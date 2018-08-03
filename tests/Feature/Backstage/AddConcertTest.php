@@ -8,11 +8,8 @@ use App\Concert;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
-use App\User;
 use App\Events\ConcertAdded;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 class AddConcertTest extends TestCase
 {
@@ -125,7 +122,19 @@ class AddConcertTest extends TestCase
 
     public function publishConcert($options = [])
     {
-        return $this->getUser($options)->post('/backstage/concerts', $options);
+        $this->signIn();
+
+        return $this->post('/backstage/concerts', $options);
+    }
+
+    public function publishConcertWithJson($options)
+    {
+        $this->signIn();
+
+        $options = $this->addDateAndTime($options);
+
+        // return $this->getUser($options)->postJson(route('backstage.concerts.store'), $options);
+        return $this->postJson(route('backstage.concerts.store'), $options);
     }
 
     public function addDateAndTime($options)
@@ -136,23 +145,10 @@ class AddConcertTest extends TestCase
         ]);
     }
 
-    public function getUser($options = [])
-    {
-        // array_get returns null if the key is not found
-        // User::find(null) returns null
-        return $this->signIn(User::find(array_get($options, 'user_id')));
-    }
-
-    public function publishConcertWithJson($options)
-    {
-        $options = $this->addDateAndTime($options);
-
-        return $this->getUser($options)->postJson('/backstage/concerts', $options);
-    }
-
     /** @test */
     public function poster_image_is_uploaded_if_included()
     {
+        $this->withoutExceptionHandling();
         $width = 600;
         $height = $width * 11 / 8.5;
 
@@ -221,11 +217,9 @@ class AddConcertTest extends TestCase
         $concert = factory(Concert::class)->make()->toArray();
 
         $concert = $this->publishConcertWithJson($concert)->json();
-        // dd($concert);
 
         Event::assertDispatched(ConcertAdded::class, function ($e) use ($concert) {
             return $e->concert->id === $concert['id'];
         });
     }
-
 }

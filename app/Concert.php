@@ -69,7 +69,8 @@ class Concert extends Model
     {
         return new Reservation(
             $this->findTickets($quantity)->each->reserve(),
-            $email
+            $email,
+            $this->user->stripe_account_id
         );
     }
 
@@ -111,9 +112,14 @@ class Concert extends Model
         return $this->tickets()->sold()->count();
     }
 
+    public function totalTickets()
+    {
+        $this->tickets()->count();
+    }
+
     public function percentSoldOut()
     {
-        return number_format(($this->ticketsSold() / $this->tickets_quantity) * 100, 2);
+        return number_format(($this->ticketsSold() / $this->ticket_quantity) * 100, 2);
     }
 
     public function revenueInDollars()
