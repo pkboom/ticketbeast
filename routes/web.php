@@ -11,8 +11,6 @@ Auth::routes();
 
 Route::get('/invitations/{code}', 'InvitationController@show')->name('invitations.show');
 
-// Route::group([
-//     'middleware' => 'auth', 'prefix' => 'backstage', 'namespace' => 'Backstage'], function () {
 Route::middleware('auth')
         ->prefix('backstage')
         ->namespace('Backstage')
